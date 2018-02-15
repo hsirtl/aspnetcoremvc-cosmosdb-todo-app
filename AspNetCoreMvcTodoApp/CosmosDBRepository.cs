@@ -15,13 +15,12 @@ namespace todo
 
     public static class DocumentDBRepository<T> where T : class
     {
-        private static readonly string EndpointUri = "https://hsirtlcosmosdb.documents.azure.com:443/";
-        private static readonly string PrimaryKey = "MYS1Ro97KWfBV3BFrtIfafeXbKQQvU5zhz7b9u3O2EKwi65xDAVF0EcJFXH1dIUxDosfBLLzCZCnEB7OoKU9Tg==";
-        private static readonly string DatabaseId = "ToDoList";
+        private static readonly string EndpointUri =  "https://[YOUR_COSMOS_DB_NAME].documents.azure.com:443/";
+        private static readonly string PrimaryKey =   "[PRIMARY_KEY]";
+        private static readonly string DatabaseId =   "ToDoList";
         private static readonly string CollectionId = "Items";
 
         private static DocumentClient client;
-
 
 
         public static async Task<T> GetItemAsync(string id, string category)
