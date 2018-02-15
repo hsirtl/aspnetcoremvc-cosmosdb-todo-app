@@ -1,37 +1,104 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using AspNetCoreMvcTodoApp.Models;
+using System.Threading.Tasks;
+using todo;
+using todo.Models;
 
 namespace AspNetCoreMvcTodoApp.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        [ActionName("Index")]
+        public async Task<ActionResult> IndexAsync()
+        {
+            var items = await DocumentDBRepository<Item>.GetItemsAsync(d => !d.Completed);
+            return View(items);
+        }
+
+#pragma warning disable 1998
+        [ActionName("Create")]
+        public async Task<ActionResult> CreateAsync()
         {
             return View();
         }
+#pragma warning restore 1998
 
-        public IActionResult About()
+        [HttpPost]
+        [ActionName("Create")]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> CreateAsync(Item item)
         {
-            ViewData["Message"] = "Your application description page.";
+            if (ModelState.IsValid)
+            {
+                await DocumentDBRepository<Item>.CreateItemAsync(item);
+                return RedirectToAction("Index");
+            }
 
-            return View();
+            return View(item);
         }
 
-        public IActionResult Contact()
+        [HttpPost]
+        [ActionName("Edit")]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> EditAsync(Item item)
         {
-            ViewData["Message"] = "Your contact page.";
+            if (ModelState.IsValid)
+            {
+                await DocumentDBRepository<Item>.UpdateItemAsync(item.Id, item);
+                return RedirectToAction("Index");
+            }
 
-            return View();
+            return View(item);
         }
 
-        public IActionResult Error()
+        [ActionName("Edit")]
+        public async Task<ActionResult> EditAsync(string id, string category)
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            if (id == null)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest);
+            }
+
+            Item item = await DocumentDBRepository<Item>.GetItemAsync(id, category);
+            if (item == null)
+            {
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+            return View(item);
+        }
+
+        [ActionName("Delete")]
+        public async Task<ActionResult> DeleteAsync(string id, string category)
+        {
+            if (id == null)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest);
+            }
+
+            Item item = await DocumentDBRepository<Item>.GetItemAsync(id, category);
+            if (item == null)
+            {
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+            return View(item);
+        }
+
+        [HttpPost]
+        [ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> DeleteConfirmedAsync(string id, string category)
+        {
+            await DocumentDBRepository<Item>.DeleteItemAsync(id, category);
+            return RedirectToAction("Index");
+        }
+
+        [ActionName("Details")]
+        public async Task<ActionResult> DetailsAsync(string id, string category)
+        {
+            Item item = await DocumentDBRepository<Item>.GetItemAsync(id, category);
+            return View(item);
         }
     }
 }
